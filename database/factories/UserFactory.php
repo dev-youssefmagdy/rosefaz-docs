@@ -34,6 +34,7 @@ class UserFactory extends Factory
             'remember_token' => Str::random(10),
             'role' => Role::BranchManager,
             'branch_id' => Branch::factory(),
+            'is_active' => true,
         ];
     }
 

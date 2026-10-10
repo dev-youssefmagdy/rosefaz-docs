@@ -1,6 +1,6 @@
 # Rose Fan Contract Authentication Requests — Shared Context (READ FIRST, every phase)
 
-Laravel 13 / PHP 8.3 / SQLite / Tailwind 4 (vite) / Blade / vanilla JS `fetch` (no jQuery, no Livewire, no SPA).
+Laravel 13 / PHP 8.3 / MySQL (db `rosefan_docs`, tests use `rosefan_docs_test`, already configured in .env/phpunit.xml; node_modules installed) / Tailwind 4 (vite) / Blade / vanilla JS `fetch` (no jQuery, no Livewire, no SPA).
 UI is **Arabic, RTL** (`<html lang="ar" dir="rtl">`). Logo: `public/logo.png` (use `asset('logo.png')`).
 Follow existing code style; run `vendor/bin/pint --dirty` after PHP edits. Do NOT touch files outside your phase scope.
 
@@ -31,3 +31,5 @@ No approve/reject workflow (not requested). Only `viewed_at` (set when general m
 
 ## Phases (run in order, each as a fresh agent)
 01 foundation · 02 branches · 03 employees · 04 requests-create · 05 requests-view-print-notes · 06 qa-polish
+
+Phase files: `docs/plan/NN-*.md`. Verify frontend with `npm run build` (must pass). Do not run `npm run dev`/long-running servers.

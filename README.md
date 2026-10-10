@@ -1,3 +1,32 @@
+# Rose Fan — طلبات توثيق العقود الإلكترونية
+
+Laravel 13 / PHP 8.3 / MySQL / Blade + Tailwind 4 (Arabic, RTL). Electronic contract authentication requests for مجموعة روز فان الفندقية.
+
+## Setup
+```sh
+composer install && npm install
+cp .env.example .env && php artisan key:generate   # set DB_DATABASE=rosefan_docs (tests use rosefan_docs_test)
+php artisan migrate --seed
+npm run build
+php artisan serve
+php artisan test --compact
+```
+
+## Seeded accounts (password: `password`)
+- General manager: `gm@rosefaz.test`
+- Branch managers: `branch1@rosefaz.test`, `branch2@rosefaz.test`, `branch3@rosefaz.test` (branches 1–3)
+
+## Roles
+- **branch_manager**: belongs to one branch; creates requests (read-only after submit, no edit/delete) and sees only his branch's requests.
+- **general_manager**: sees all branches' requests (a "جديد" badge until first opened), adds append-only notes, manages branches, their managers and employees.
+
+## Modules
+- **Requests** (`/requests`): paper-form replica (`requests/_document.blade.php`) shared by create, show and print; ref no `RF-{year}-{000001}`, remaining amount and Hijri dates computed server-side.
+- **Notes**: append-only history per request (no update/delete anywhere).
+- **Branches** (`/branches`) and **Employees** (`/employees`): general manager only; AJAX lists with search and pagination.
+
+---
+
 <p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
 <p align="center">

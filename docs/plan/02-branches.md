@@ -1,0 +1,7 @@
+# Phase 02 — Branches module (read 00-overview.md first; phase 01 is done)
+GM only (`role:general_manager`). Single page `/branches` + AJAX, no full-page reloads.
+- Routes (resource-like, JSON): `GET /branches` (page), `GET /branches/list?q=&page=`, `POST /branches`, `PUT /branches/{branch}`, `PATCH /branches/{branch}/toggle` (activate/deactivate; **no hard delete** if it has requests/users — deactivate only).
+- Page: search box, table (رقم الفرع, الاسم, عدد المديرين, الحالة, actions), "إضافة فرع" opens a modal form (name, number, is_active) submitted via `api()`, validation errors inline, table refreshes without reload.
+- Branch managers sub-feature: in each row a "المديرون" button opens a modal listing the branch's manager users (name, email) with add form (name, email, password) and activate/deactivate? Keep minimal: `GET /branches/{branch}/managers`, `POST /branches/{branch}/managers` (creates User role=branch_manager, branch_id fixed server-side), `PUT /branches/{branch}/managers/{user}` (name/email/optional password; abort 404 if user not in that branch), `DELETE` allowed only if user has no requests (else 422 with Arabic message).
+- FormRequests: `StoreBranchRequest`, `UpdateBranchRequest` (unique number/name ignoring self), `StoreManagerRequest`, `UpdateManagerRequest`. Policy or middleware only; Arabic messages.
+- Tests: CRUD happy paths, unique validation, BM gets 403, manager cannot be edited through another branch's URL.

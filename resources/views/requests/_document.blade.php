@@ -277,6 +277,11 @@
                     <th colspan="2" class="{{ $en }}" dir="ltr">Responsible Officer</th>
                 </tr>
 
+                {{-- خاص بالإدارة فقط --}}
+                <tr>
+                    <th colspan="12" class="border border-black bg-[#d9d9d9] px-2 py-2 text-center text-[13px] font-bold">خاص بالإدارة فقط</th>
+                </tr>
+
                 {{-- رقم العقد / Ref # --}}
                 <tr>
                     <th scope="row" colspan="2" class="{{ $ar }}">رقم العقد</th>

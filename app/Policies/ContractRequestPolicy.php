@@ -28,6 +28,11 @@ class ContractRequestPolicy
         return false;
     }
 
+    public function updateRefNo(User $user, ContractRequest $request): bool
+    {
+        return $user->isGeneralManager();
+    }
+
     public function delete(User $user, ContractRequest $request): bool
     {
         return false;

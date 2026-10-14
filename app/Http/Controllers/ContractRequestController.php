@@ -78,6 +78,7 @@ class ContractRequestController extends Controller
         return view('requests.show', [
             'contractRequest' => $contractRequest,
             'canAddNote' => $user->can('create', [RequestNote::class, $contractRequest]),
+            'canEditRefNo' => $user->can('updateRefNo', $contractRequest),
         ]);
     }
 
@@ -86,6 +87,24 @@ class ContractRequestController extends Controller
         Gate::authorize('create', ContractRequest::class);
 
         return view('requests.create', ['branch' => $request->user()->branch]);
+    }
+
+    public function updateRefNo(Request $request, ContractRequest $contractRequest): JsonResponse
+    {
+        Gate::authorize('updateRefNo', $contractRequest);
+
+        $validated = $request->validate([
+            'ref_no' => ['required', 'digits:11', 'unique:contract_requests,ref_no,'.$contractRequest->id],
+        ], [
+            'ref_no.required' => 'رقم العقد مطلوب.',
+            'ref_no.digits' => 'رقم العقد يجب أن يتكون من 11 رقمًا.',
+            'ref_no.unique' => 'رقم العقد مستخدم مسبقًا.',
+        ]);
+
+        $contractRequest->ref_no = $validated['ref_no'];
+        $contractRequest->save();
+
+        return response()->json(['message' => 'تم حفظ رقم العقد بنجاح.', 'ref_no' => $contractRequest->ref_no]);
     }
 
     public function store(StoreContractRequestRequest $request, ContractRequestService $service): JsonResponse

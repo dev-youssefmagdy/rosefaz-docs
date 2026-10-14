@@ -6,6 +6,7 @@
 @php
     $r = $request ?? null;
     $edit = ($mode ?? 'view') === 'edit';
+    $adminEdit = $adminEdit ?? false;
     $branch = $branch ?? $r?->branch;
 
     $date = fn ($d) => $d ? $d->format('d/m/Y') : '';
@@ -285,14 +286,17 @@
                 {{-- رقم العقد / Ref # --}}
                 <tr>
                     <th scope="row" colspan="2" class="{{ $ar }}">رقم العقد</th>
-                    <td colspan="8" class="{{ $white }}">
+                    <td colspan="8" class="{{ $adminEdit ? $yellow : $white }}">
                         @include('requests._digit-boxes', [
-                            'name' => null,
+                            'name' => $adminEdit ? 'ref_no' : null,
+                            'label' => 'رقم العقد',
                             'value' => $refDigits,
-                            'edit' => false,
-                            'yellow' => false,
-                            'placeholder' => $r ? $r->ref_no : 'يُولَّد تلقائيا',
+                            'edit' => $adminEdit,
+                            'yellow' => $adminEdit,
+                            'count' => 11,
+                            'placeholder' => (! $adminEdit && $r) ? $r->ref_no : null,
                         ])
+                        @if ($adminEdit)<p data-error-for="ref_no" class="{{ $err }}"></p>@endif
                     </td>
                     <th colspan="2" class="{{ $en }}" dir="ltr">Ref #</th>
                 </tr>

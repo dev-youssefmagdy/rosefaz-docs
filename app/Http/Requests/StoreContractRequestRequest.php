@@ -18,11 +18,15 @@ class StoreContractRequestRequest extends FormRequest
     {
         $trim = fn ($v) => is_string($v) ? trim($v) : $v;
 
+        $annualRent = (float) $this->input('annual_rent', 0);
+        $months = max(1, (int) $this->input('contract_duration_months', 1));
+
         $this->merge([
             'full_name' => $trim($this->input('full_name')),
             'id_number' => $trim($this->input('id_number')),
             'mobile' => $trim($this->input('mobile')),
             'apartment_no' => $trim($this->input('apartment_no')) ?: null,
+            'total_rent' => round($annualRent * $months, 2),
         ]);
     }
 
@@ -43,7 +47,7 @@ class StoreContractRequestRequest extends FormRequest
             'rental_type' => ['required', Rule::enum(RentalType::class)],
             'contract_duration_months' => ['required', 'integer', 'between:1,600'],
             'rental_date' => ['required', 'date'],
-            'amount_paid' => [...$money, 'lte:annual_rent'],
+            'amount_paid' => [...$money, 'lte:total_rent'],
             'start_date' => ['required', 'date'],
             'employee_id' => ['required', 'integer', 'exists:employees,id'],
         ];
@@ -72,7 +76,7 @@ class StoreContractRequestRequest extends FormRequest
             'insurance_amount.required' => 'مبلغ التأمين مطلوب.',
             'authentication_amount.required' => 'قيمة التوثيق مطلوبة.',
             'amount_paid.required' => 'المبلغ المدفوع مطلوب.',
-            'amount_paid.lte' => 'المبلغ المدفوع لا يمكن أن يتجاوز قيمة الإيجار.',
+            'amount_paid.lte' => 'المبلغ المدفوع لا يمكن أن يتجاوز إجمالي قيمة الإيجار.',
             'rental_type.required' => 'نوع الإيجار مطلوب.',
             'rental_type.enum' => 'نوع الإيجار غير صحيح.',
             'contract_duration_months.required' => 'مدة العقد مطلوبة.',

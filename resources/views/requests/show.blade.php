@@ -11,9 +11,19 @@
         </div>
     </div>
 
+    @if ($canEditRefNo)
+    <form id="ref-no-form" novalidate>
+    @endif
     <div class="rounded-xl bg-white shadow print:rounded-none print:shadow-none">
-        @include('requests._document', ['request' => $contractRequest, 'mode' => 'view'])
+        @include('requests._document', ['request' => $contractRequest, 'mode' => 'view', 'adminEdit' => $canEditRefNo])
     </div>
+    @if ($canEditRefNo)
+        <div class="mt-3 flex items-center justify-end gap-3 print:hidden">
+            <p id="ref-no-msg" class="hidden text-sm"></p>
+            <button type="submit" class="rounded-md bg-rose-700 px-5 py-2 text-sm font-bold text-white hover:bg-rose-800 disabled:cursor-wait disabled:opacity-60">حفظ رقم العقد</button>
+        </div>
+    </form>
+    @endif
 
     <section id="notes-panel" class="mt-6 rounded-xl bg-white p-6 shadow print:hidden">
         <h2 class="mb-4 text-lg font-bold">سجل الملاحظات</h2>
@@ -39,6 +49,28 @@
 <script>
 document.addEventListener('DOMContentLoaded', async () => {
     const { api, toast, showErrors, clearErrors, el } = window.App;
+
+    const refNoForm = document.getElementById('ref-no-form');
+    if (refNoForm) {
+        window.App.bindDigitBoxes(refNoForm);
+        const refNoUrl = @json(route('requests.ref-no.update', $contractRequest));
+        refNoForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            clearErrors(refNoForm);
+            const btn = refNoForm.querySelector('button[type="submit"]');
+            btn.disabled = true;
+            try {
+                const res = await api(refNoUrl, { method: 'PATCH', body: { ref_no: refNoForm.querySelector('[name="ref_no"]').value } });
+                toast(res.message);
+                document.querySelector('h1 span[dir="ltr"]').textContent = res.ref_no;
+            } catch (err) {
+                if (err.status === 422) showErrors(refNoForm, err.errors);
+                else toast(err.message || 'تعذر حفظ رقم العقد.', 'error');
+            } finally {
+                btn.disabled = false;
+            }
+        });
+    }
     const list = document.getElementById('notes-list');
     const form = document.getElementById('note-form');
     const notesUrl = @json(route('requests.notes.index', $contractRequest));

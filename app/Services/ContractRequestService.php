@@ -36,7 +36,8 @@ class ContractRequestService
                     $request->branch_id = $branchId;
                     $request->created_by = $user->id;
                     $request->request_date = now()->toDateString();
-                    $request->remaining_amount = bcsub((string) $data['annual_rent'], (string) $data['amount_paid'], 2);
+                    $totalRent = bcmul((string) $data['annual_rent'], (string) $data['contract_duration_months'], 2);
+                    $request->remaining_amount = bcsub($totalRent, (string) $data['amount_paid'], 2);
                     $request->ref_no = $this->nextRefNo();
                     $request->save();
 

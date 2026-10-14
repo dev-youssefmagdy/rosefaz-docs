@@ -20,7 +20,7 @@ export function toHijri(isoDate) {
 
 const money = (n) => n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-function bindDigitBoxes(form) {
+export function bindDigitBoxes(form) {
     form.querySelectorAll('[data-digits]').forEach((wrap) => {
         const input = wrap.querySelector('input');
         const boxes = wrap.querySelectorAll('[data-box]');
@@ -55,15 +55,18 @@ function bindHijri(form) {
 function bindRemaining(form) {
     const out = form.querySelector('[data-remaining]');
     const rent = form.elements.annual_rent;
+    const months = form.elements.contract_duration_months;
     const paid = form.elements.amount_paid;
-    if (!out || !rent || !paid) return;
+    if (!out || !rent || !months || !paid) return;
     const render = () => {
         if (rent.value === '') { out.textContent = ''; return; }
-        const remaining = (Math.round((Number(rent.value) || 0) * 100) - Math.round((Number(paid.value) || 0) * 100)) / 100;
+        const total = Math.round((Number(rent.value) || 0) * (Number(months.value) || 1) * 100);
+        const remaining = (total - Math.round((Number(paid.value) || 0) * 100)) / 100;
         out.textContent = money(remaining);
         out.classList.toggle('text-red-600', remaining < 0);
     };
     rent.addEventListener('input', render);
+    months.addEventListener('input', render);
     paid.addEventListener('input', render);
     render();
 }

@@ -1,6 +1,7 @@
-{{-- 10 boxed digit cells. Params: $name (nullable in view mode), $value (string), $edit (bool), $yellow (bool), $placeholder (optional caption) --}}
+{{-- Boxed digit cells. Params: $name (nullable in view mode), $value (string), $edit (bool), $yellow (bool), $count (int, default 10), $placeholder (optional caption) --}}
 @php
-    $chars = mb_str_split(str_pad(mb_substr((string) $value, 0, 10), 10, ' '));
+    $count = (int) ($count ?? 10);
+    $chars = mb_str_split(str_pad(mb_substr((string) $value, 0, $count), $count, ' '));
     $boxBg = ($yellow ?? false) ? 'bg-[#ffff00]' : 'bg-white';
 @endphp
 <div class="relative inline-flex flex-col items-center gap-0.5 py-1" @if ($edit && $name) data-digits @endif>
@@ -10,7 +11,7 @@
         @endforeach
     </div>
     @if ($edit && $name)
-        <input type="text" name="{{ $name }}" value="{{ $value }}" inputmode="numeric" autocomplete="off" maxlength="10"
+        <input type="text" name="{{ $name }}" value="{{ $value }}" inputmode="numeric" autocomplete="off" maxlength="{{ $count }}"
                aria-label="{{ $label ?? $name }}" class="absolute inset-0 h-full w-full cursor-text opacity-0">
     @endif
     @if (! empty($placeholder))

@@ -23,7 +23,8 @@
 document.addEventListener('DOMContentLoaded', () => {
     window.App.initRequestForm(document.getElementById('request-form'), {
         storeUrl: @json(route('requests.store')),
-        employeesUrl: @json(route('lookups.employees')),
+        usersUrl: @json(route('lookups.users')),
+        authUserId: @json(auth()->id()),
     });
 });
 </script>

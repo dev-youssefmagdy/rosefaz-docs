@@ -267,12 +267,12 @@
                     <th scope="row" colspan="2" class="{{ $ar }}">الموظف المختص</th>
                     <td colspan="8" class="{{ $yellow }}">
                         @if ($edit)
-                            <select name="employee_id" class="{{ $field }}" aria-label="الموظف المختص">
+                            <select name="user_id" class="{{ $field }}" aria-label="الموظف المختص">
                                 <option value="">جاري التحميل…</option>
                             </select>
-                            <p data-error-for="employee_id" class="{{ $err }}"></p>
+                            <p data-error-for="user_id" class="{{ $err }}"></p>
                         @else
-                            <span class="{{ $static }}">{{ $r?->employee?->name }}</span>
+                            <span class="{{ $static }}">{{ $r?->responsibleUser?->name }}</span>
                         @endif
                     </td>
                     <th colspan="2" class="{{ $en }}" dir="ltr">Responsible Officer</th>
@@ -294,7 +294,7 @@
                             'edit' => $adminEdit,
                             'yellow' => $adminEdit,
                             'count' => 11,
-                            'placeholder' => (! $adminEdit && $r) ? $r->ref_no : null,
+                            'placeholder' => $adminEdit ? null : ($r ? $r->ref_no : 'يُولَّد تلقائيا'),
                         ])
                         @if ($adminEdit)<p data-error-for="ref_no" class="{{ $err }}"></p>@endif
                     </td>

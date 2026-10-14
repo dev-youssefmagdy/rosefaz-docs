@@ -5,7 +5,6 @@ namespace Database\Factories;
 use App\Enums\RentalType;
 use App\Models\Branch;
 use App\Models\ContractRequest;
-use App\Models\Employee;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -21,7 +20,7 @@ class ContractRequestFactory extends Factory
             'ref_no' => 'RF-'.now()->year.'-'.str_pad((string) fake()->unique()->numberBetween(1, 999999), 6, '0', STR_PAD_LEFT),
             'branch_id' => Branch::factory(),
             'created_by' => fn (array $a) => User::factory()->branchManager(Branch::find($a['branch_id'])),
-            'employee_id' => fn (array $a) => Employee::factory()->state(['branch_id' => $a['branch_id']]),
+            'user_id' => fn (array $a) => $a['created_by'],
             'request_date' => now()->toDateString(),
             'full_name' => fake()->name(),
             'id_number' => fake()->numerify('1#########'),

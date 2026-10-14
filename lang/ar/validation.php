@@ -45,6 +45,5 @@ return [
         'birth_date' => 'تاريخ الميلاد',
         'mobile' => 'رقم الجوال',
         'apartment_no' => 'رقم الشقة',
-        'employee_id' => 'الموظف المختص',
     ],
 ];

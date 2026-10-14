@@ -49,7 +49,6 @@ class StoreContractRequestRequest extends FormRequest
             'rental_date' => ['required', 'date'],
             'amount_paid' => [...$money, 'lte:total_rent'],
             'start_date' => ['required', 'date'],
-            'employee_id' => ['required', 'integer', 'exists:employees,id'],
         ];
     }
 
@@ -86,9 +85,6 @@ class StoreContractRequestRequest extends FormRequest
             'rental_date.date' => 'تاريخ الإيجار غير صحيح.',
             'start_date.required' => 'تاريخ بداية العقد مطلوب.',
             'start_date.date' => 'تاريخ بداية العقد غير صحيح.',
-            'employee_id.required' => 'اختر الموظف المختص.',
-            'employee_id.integer' => 'الموظف المختص غير صحيح.',
-            'employee_id.exists' => 'الموظف المختص غير موجود.',
         ];
     }
 }

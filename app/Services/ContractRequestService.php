@@ -3,11 +3,9 @@
 namespace App\Services;
 
 use App\Models\ContractRequest;
-use App\Models\Employee;
 use App\Models\User;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
 
 class ContractRequestService
 {
@@ -18,16 +16,6 @@ class ContractRequestService
     {
         $branchId = $user->branch_id;
 
-        $employeeOk = Employee::query()
-            ->whereKey($data['employee_id'])
-            ->where('is_active', true)
-            ->where(fn ($q) => $q->whereNull('branch_id')->orWhere('branch_id', $branchId))
-            ->exists();
-
-        if (! $employeeOk) {
-            throw ValidationException::withMessages(['employee_id' => 'الموظف المختص غير متاح لهذا الفرع.']);
-        }
-
         $attempts = 0;
         while (true) {
             try {
@@ -35,6 +23,7 @@ class ContractRequestService
                     $request = new ContractRequest($data);
                     $request->branch_id = $branchId;
                     $request->created_by = $user->id;
+                    $request->user_id = $user->id;
                     $request->request_date = now()->toDateString();
                     $totalRent = bcmul((string) $data['annual_rent'], (string) $data['contract_duration_months'], 2);
                     $request->remaining_amount = bcsub($totalRent, (string) $data['amount_paid'], 2);

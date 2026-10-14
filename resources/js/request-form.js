@@ -71,14 +71,15 @@ function bindRemaining(form) {
     render();
 }
 
-async function loadEmployees(select, url) {
+async function loadUsers(select, url, authUserId) {
     try {
-        const employees = await api(url);
-        select.innerHTML = '<option value="">— اختر الموظف —</option>';
-        employees.forEach((e) => select.add(new Option(e.name, e.id)));
+        const users = await api(url);
+        select.innerHTML = '<option value="">— اختر المستخدم —</option>';
+        users.forEach((u) => select.add(new Option(u.name, u.id)));
+        if (authUserId) { select.value = authUserId; }
     } catch {
-        select.innerHTML = '<option value="">تعذر تحميل الموظفين</option>';
-        toast('تعذر تحميل قائمة الموظفين.', 'error');
+        select.innerHTML = '<option value="">تعذر تحميل المستخدمين</option>';
+        toast('تعذر تحميل قائمة المستخدمين.', 'error');
     }
 }
 
@@ -100,15 +101,15 @@ function payload(form) {
         rental_date: el.rental_date.value,
         amount_paid: el.amount_paid.value,
         start_date: el.start_date.value,
-        employee_id: el.employee_id.value,
+        user_id: el.user_id.value,
     };
 }
 
-export function initRequestForm(form, { storeUrl, employeesUrl }) {
+export function initRequestForm(form, { storeUrl, usersUrl, authUserId }) {
     bindDigitBoxes(form);
     bindHijri(form);
     bindRemaining(form);
-    loadEmployees(form.elements.employee_id, employeesUrl);
+    loadUsers(form.elements.user_id, usersUrl, authUserId);
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();

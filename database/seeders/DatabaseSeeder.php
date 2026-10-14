@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use App\Enums\Role;
 use App\Models\Branch;
-use App\Models\Employee;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 
@@ -28,11 +27,6 @@ class DatabaseSeeder extends Seeder
                 'role' => Role::BranchManager,
                 'branch_id' => $branch->id,
             ]);
-
-            Employee::firstOrCreate(['branch_id' => $branch->id, 'name' => "موظف فرع $n - 1"]);
-            Employee::firstOrCreate(['branch_id' => $branch->id, 'name' => "موظف فرع $n - 2"]);
         }
-
-        Employee::firstOrCreate(['branch_id' => null, 'name' => 'موظف عام']);
     }
 }

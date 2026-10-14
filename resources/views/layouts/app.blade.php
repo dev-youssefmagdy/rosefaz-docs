@@ -18,8 +18,7 @@
                 @if ($user?->isGeneralManager())
                     <a href="{{ Route::has('requests.index') ? route('requests.index') : '#' }}" class="text-sm font-medium hover:text-rose-700">الطلبات</a>
                     <a href="{{ Route::has('branches.index') ? route('branches.index') : '#' }}" class="text-sm font-medium hover:text-rose-700">الفروع</a>
-                    <a href="{{ Route::has('employees.index') ? route('employees.index') : '#' }}" class="text-sm font-medium hover:text-rose-700">الموظفون</a>
-                    <a href="{{ route('users.index') }}" class="text-sm font-medium hover:text-rose-700">المستخدمون</a>
+<a href="{{ route('users.index') }}" class="text-sm font-medium hover:text-rose-700">المستخدمون</a>
                 @elseif ($user?->isBranchManager())
                     <a href="{{ Route::has('requests.index') ? route('requests.index') : '#' }}" class="text-sm font-medium hover:text-rose-700">طلباتي</a>
                     <a href="{{ Route::has('requests.create') ? route('requests.create') : '#' }}" class="text-sm font-medium hover:text-rose-700">طلب جديد</a>

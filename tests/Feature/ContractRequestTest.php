@@ -4,7 +4,6 @@ namespace Tests\Feature;
 
 use App\Models\Branch;
 use App\Models\ContractRequest;
-use App\Models\Employee;
 use App\Models\RequestNote;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -19,14 +18,11 @@ class ContractRequestTest extends TestCase
 
     private User $bm;
 
-    private Employee $employee;
-
     protected function setUp(): void
     {
         parent::setUp();
         $this->branch = Branch::factory()->create();
         $this->bm = User::factory()->branchManager($this->branch)->create();
-        $this->employee = Employee::factory()->create(['branch_id' => $this->branch->id]);
     }
 
     private function payload(array $overrides = []): array
@@ -46,7 +42,6 @@ class ContractRequestTest extends TestCase
             'rental_date' => '2026-10-01',
             'amount_paid' => '10000.25',
             'start_date' => '2026-10-10',
-            'employee_id' => $this->employee->id,
         ], $overrides);
     }
 
@@ -65,7 +60,8 @@ class ContractRequestTest extends TestCase
         $r = ContractRequest::findOrFail($res->json('id'));
         $this->assertSame($this->branch->id, $r->branch_id);
         $this->assertSame($this->bm->id, $r->created_by);
-        $this->assertSame('19999.75', $r->remaining_amount);
+        $this->assertSame($this->bm->id, $r->user_id);
+        $this->assertSame('349999.75', $r->remaining_amount);
         $this->assertSame(today()->toDateString(), $r->request_date->toDateString());
         $this->assertSame('RF-'.now()->year.'-000001', $r->ref_no);
         $this->assertNull($r->viewed_at);
@@ -106,7 +102,7 @@ class ContractRequestTest extends TestCase
         $bm->postJson('/requests', [])->assertUnprocessable()->assertJsonValidationErrors([
             'full_name', 'id_number', 'birth_date', 'mobile', 'needs_electricity_bill', 'annual_rent',
             'insurance_amount', 'authentication_amount', 'rental_type', 'contract_duration_months',
-            'rental_date', 'amount_paid', 'start_date', 'employee_id',
+            'rental_date', 'amount_paid', 'start_date',
         ]);
 
         $bm->postJson('/requests', $this->payload([
@@ -118,27 +114,14 @@ class ContractRequestTest extends TestCase
             'birth_date' => 'not-a-date',
         ]))->assertUnprocessable()->assertJsonValidationErrors(['id_number', 'mobile', 'rental_type', 'contract_duration_months', 'annual_rent', 'birth_date']);
 
-        $bm->postJson('/requests', $this->payload(['amount_paid' => '30000.01']))
+        $bm->postJson('/requests', $this->payload(['amount_paid' => '360000.01']))
             ->assertUnprocessable()
-            ->assertJsonValidationErrors(['amount_paid' => 'المبلغ المدفوع لا يمكن أن يتجاوز قيمة الإيجار.']);
+            ->assertJsonValidationErrors(['amount_paid' => 'المبلغ المدفوع لا يمكن أن يتجاوز إجمالي قيمة الإيجار.']);
 
         $bm->postJson('/requests', $this->payload(['mobile' => '055123456a']))->assertJsonValidationErrors('mobile');
         $bm->postJson('/requests', $this->payload(['contract_duration_months' => 601]))->assertJsonValidationErrors('contract_duration_months');
 
         $this->assertSame(0, ContractRequest::count());
-    }
-
-    public function test_employee_must_be_active_and_of_branch_or_global(): void
-    {
-        $foreign = Employee::factory()->create();
-        $inactive = Employee::factory()->create(['branch_id' => $this->branch->id, 'is_active' => false]);
-        $global = Employee::factory()->global()->create();
-        $bm = $this->actingAs($this->bm);
-
-        $bm->postJson('/requests', $this->payload(['employee_id' => $foreign->id]))->assertJsonValidationErrors('employee_id');
-        $bm->postJson('/requests', $this->payload(['employee_id' => $inactive->id]))->assertJsonValidationErrors('employee_id');
-        $bm->postJson('/requests', $this->payload(['employee_id' => 99999]))->assertJsonValidationErrors('employee_id');
-        $bm->postJson('/requests', $this->payload(['employee_id' => $global->id]))->assertCreated();
     }
 
     public function test_list_is_scoped_per_role(): void

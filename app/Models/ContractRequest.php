@@ -17,7 +17,7 @@ use IntlDateFormatter;
 #[Fillable([
     'full_name', 'id_number', 'birth_date', 'mobile', 'needs_electricity_bill', 'apartment_no',
     'annual_rent', 'insurance_amount', 'authentication_amount', 'rental_type', 'contract_duration_months',
-    'rental_date', 'amount_paid', 'start_date', 'employee_id',
+    'rental_date', 'amount_paid', 'start_date', 'user_id',
 ])]
 class ContractRequest extends Model
 {
@@ -53,9 +53,9 @@ class ContractRequest extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
-    public function employee(): BelongsTo
+    public function responsibleUser(): BelongsTo
     {
-        return $this->belongsTo(Employee::class);
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     public function notes(): HasMany

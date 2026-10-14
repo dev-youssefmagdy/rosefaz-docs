@@ -33,7 +33,6 @@
                         <th class="p-2 text-start">الاسم</th>
                         <th class="p-2 text-start">الفرع</th>
                         <th class="p-2 text-start">تاريخ الطلب</th>
-                        <th class="p-2 text-start">الموظف المختص</th>
                         <th class="p-2 text-start">الملاحظات</th>
                     </tr>
                 </thead>
@@ -68,7 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         const rows = $('#rows');
-        if (!res.data.length) emptyRow(rows, 6, 'لا توجد طلبات.');
+        if (!res.data.length) emptyRow(rows, 5, 'لا توجد طلبات.');
         else rows.replaceChildren(...res.data.map((r) => el('tr', { class: `border-t cursor-pointer hover:bg-rose-50 ${r.is_new ? 'font-bold' : ''}`, dataset: { url: r.url } }, [
             el('td', { class: 'p-2 whitespace-nowrap' }, [
                 el('a', { href: r.url, class: 'text-rose-700 hover:underline', dir: 'ltr', text: r.ref_no }),
@@ -77,7 +76,6 @@ document.addEventListener('DOMContentLoaded', () => {
             el('td', { class: 'p-2', text: r.full_name }),
             el('td', { class: 'p-2', text: r.branch ? r.branch.name : '' }),
             el('td', { class: 'p-2 whitespace-nowrap', dir: 'ltr', text: fmtDate(r.request_date) }),
-            el('td', { class: 'p-2', text: r.employee }),
             el('td', { class: 'p-2', text: r.notes_count }),
         ])));
         $('#total').textContent = `الإجمالي: ${res.meta.total}`;

@@ -4,7 +4,6 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BranchController;
 use App\Http\Controllers\BranchManagerController;
 use App\Http\Controllers\ContractRequestController;
-use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\LookupController;
 use App\Http\Controllers\PasswordController;
 use App\Http\Controllers\RequestNoteController;
@@ -34,7 +33,7 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::post('/{contractRequest}/notes', [RequestNoteController::class, 'store'])->whereNumber('contractRequest')->name('notes.store');
     });
 
-    Route::get('/lookups/employees', [LookupController::class, 'employees'])->name('lookups.employees');
+    Route::get('/lookups/users', [LookupController::class, 'users'])->name('lookups.users');
 
     Route::middleware('role:general_manager')->prefix('users')->name('users.')->group(function () {
         Route::get('/', [UserController::class, 'index'])->name('index');
@@ -43,14 +42,6 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::put('/{user}', [UserController::class, 'update'])->name('update');
         Route::patch('/{user}/toggle', [UserController::class, 'toggle'])->name('toggle');
         Route::delete('/{user}', [UserController::class, 'destroy'])->name('destroy');
-    });
-
-    Route::middleware('role:general_manager')->prefix('employees')->name('employees.')->group(function () {
-        Route::get('/', [EmployeeController::class, 'index'])->name('index');
-        Route::get('/list', [EmployeeController::class, 'list'])->name('list');
-        Route::post('/', [EmployeeController::class, 'store'])->name('store');
-        Route::put('/{employee}', [EmployeeController::class, 'update'])->name('update');
-        Route::patch('/{employee}/toggle', [EmployeeController::class, 'toggle'])->name('toggle');
     });
 
     Route::middleware('role:general_manager')->prefix('branches')->name('branches.')->group(function () {

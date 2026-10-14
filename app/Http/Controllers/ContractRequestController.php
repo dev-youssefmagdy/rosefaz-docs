@@ -35,7 +35,7 @@ class ContractRequestController extends Controller
 
         $page = ContractRequest::query()
             ->forUser($user)
-            ->with(['branch:id,name,number', 'employee:id,name'])
+            ->with(['branch:id,name,number', 'responsibleUser:id,name'])
             ->withCount('notes')
             ->when($q !== '', fn ($query) => $query->where(fn ($w) => $w
                 ->where('ref_no', 'like', "%{$q}%")
@@ -54,7 +54,7 @@ class ContractRequestController extends Controller
                 'ref_no' => $r->ref_no,
                 'full_name' => $r->full_name,
                 'branch' => $r->branch?->only('id', 'name', 'number'),
-                'employee' => $r->employee?->name,
+                'responsible_user' => $r->responsibleUser?->name,
                 'request_date' => $r->request_date->format('Y-m-d'),
                 'notes_count' => $r->notes_count,
                 'is_new' => $user->isGeneralManager() && $r->viewed_at === null,
@@ -73,7 +73,7 @@ class ContractRequestController extends Controller
             ContractRequest::whereKey($contractRequest->id)->whereNull('viewed_at')->update(['viewed_at' => now()]);
         }
 
-        $contractRequest->load(['branch', 'employee']);
+        $contractRequest->load(['branch', 'responsibleUser']);
 
         return view('requests.show', [
             'contractRequest' => $contractRequest,

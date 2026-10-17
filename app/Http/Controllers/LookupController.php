@@ -11,11 +11,20 @@ class LookupController extends Controller
     public function users(Request $request): JsonResponse
     {
         $user = $request->user();
-        $branchId = $user->isBranchManager() ? $user->branch_id : $request->query('branch_id');
+        $requestedBranchId = (int) $request->query('branch_id', 0) ?: null;
+
+        if ($user->isBranchManager()) {
+            $userBranchIds = $user->branches()->pluck('branches.id');
+            $allowedBranchIds = $requestedBranchId && $userBranchIds->contains($requestedBranchId)
+                ? collect([$requestedBranchId])
+                : $userBranchIds;
+        } else {
+            $allowedBranchIds = $requestedBranchId ? collect([$requestedBranchId]) : null;
+        }
 
         $users = User::query()
             ->where('is_active', true)
-            ->when($branchId, fn ($q) => $q->where('branch_id', (int) $branchId))
+            ->when($allowedBranchIds, fn ($q) => $q->whereIn('branch_id', $allowedBranchIds))
             ->orderBy('name')
             ->get(['id', 'name']);
 

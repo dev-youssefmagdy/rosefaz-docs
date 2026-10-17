@@ -14,7 +14,7 @@ class ContractRequestService
      */
     public function create(User $user, array $data): ContractRequest
     {
-        $branchId = $user->branch_id;
+        $branchId = (int) $data['branch_id'];
 
         $attempts = 0;
         while (true) {

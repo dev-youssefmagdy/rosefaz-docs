@@ -48,14 +48,15 @@ class UserModuleTest extends TestCase
 
         $this->actingAs($gm)->postJson('/users', [
             'name' => 'BM', 'email' => 'bm@x.test', 'password' => 'secret-pass', 'role' => 'branch_manager',
-            'branch_id' => $branch->id, 'is_active' => true,
+            'branch_ids' => [$branch->id], 'is_active' => true,
         ])->assertCreated();
         $this->assertDatabaseHas('users', ['email' => 'bm@x.test', 'branch_id' => $branch->id, 'role' => 'branch_manager']);
+        $this->assertDatabaseHas('branch_user', ['branch_id' => $branch->id]);
 
         // a general manager never gets a branch even if one is sent
         $this->actingAs($gm)->postJson('/users', [
             'name' => 'GM2', 'email' => 'gm2@x.test', 'password' => 'secret-pass', 'role' => 'general_manager',
-            'branch_id' => $branch->id, 'is_active' => true,
+            'branch_ids' => [$branch->id], 'is_active' => true,
         ])->assertCreated();
         $this->assertDatabaseHas('users', ['email' => 'gm2@x.test', 'branch_id' => null, 'role' => 'general_manager']);
     }
@@ -65,7 +66,7 @@ class UserModuleTest extends TestCase
         $gm = $this->gm();
         $this->actingAs($gm)->postJson('/users', [
             'name' => 'x', 'email' => $gm->email, 'password' => 'short', 'role' => 'branch_manager', 'is_active' => true,
-        ])->assertUnprocessable()->assertJsonValidationErrors(['email', 'password', 'branch_id']);
+        ])->assertUnprocessable()->assertJsonValidationErrors(['email', 'password', 'branch_ids']);
 
         $this->actingAs($gm)->postJson('/users', [
             'name' => 'x', 'email' => 'a@b.test', 'password' => 'secret-pass', 'role' => 'hacker', 'is_active' => true,
@@ -81,14 +82,15 @@ class UserModuleTest extends TestCase
 
         $this->actingAs($gm)->putJson("/users/{$bm->id}", [
             'name' => 'New', 'email' => $bm->email, 'password' => '', 'role' => 'branch_manager',
-            'branch_id' => $other->id, 'is_active' => true,
+            'branch_ids' => [$other->id], 'is_active' => true,
         ])->assertOk();
         $this->assertSame($old, $bm->fresh()->password);
         $this->assertSame($other->id, $bm->fresh()->branch_id);
+        $this->assertDatabaseHas('branch_user', ['branch_id' => $other->id]);
 
         $this->actingAs($gm)->putJson("/users/{$bm->id}", [
             'name' => 'New', 'email' => $bm->email, 'password' => 'brand-new-pass', 'role' => 'branch_manager',
-            'branch_id' => $other->id, 'is_active' => true,
+            'branch_ids' => [$other->id], 'is_active' => true,
         ])->assertOk();
         $this->assertNotSame($old, $bm->fresh()->password);
     }
@@ -98,7 +100,7 @@ class UserModuleTest extends TestCase
         $gm = $this->gm();
         $payload = ['name' => $gm->name, 'email' => $gm->email, 'role' => 'general_manager', 'is_active' => true];
 
-        $this->actingAs($gm)->putJson("/users/{$gm->id}", ['role' => 'branch_manager', 'branch_id' => Branch::factory()->create()->id] + $payload)
+        $this->actingAs($gm)->putJson("/users/{$gm->id}", ['role' => 'branch_manager', 'branch_ids' => [Branch::factory()->create()->id]] + $payload)
             ->assertUnprocessable();
         $this->actingAs($gm)->putJson("/users/{$gm->id}", ['is_active' => false] + $payload)->assertUnprocessable();
         $this->actingAs($gm)->patchJson("/users/{$gm->id}/toggle")->assertUnprocessable();

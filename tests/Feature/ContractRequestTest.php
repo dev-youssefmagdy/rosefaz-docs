@@ -28,6 +28,7 @@ class ContractRequestTest extends TestCase
     private function payload(array $overrides = []): array
     {
         return array_merge([
+            'branch_id' => $this->branch->id,
             'full_name' => 'محمد أحمد علي سالم',
             'id_number' => '1234567890',
             'birth_date' => '1990-05-15',
@@ -49,8 +50,13 @@ class ContractRequestTest extends TestCase
     {
         $other = Branch::factory()->create();
 
+        // branch_id from a branch the user doesn't belong to is rejected
+        $this->actingAs($this->bm)->postJson('/requests', $this->payload(['branch_id' => $other->id]))
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('branch_id');
+
+        // other server-side fields (remaining_amount, created_by, ref_no, request_date) cannot be spoofed
         $res = $this->actingAs($this->bm)->postJson('/requests', $this->payload([
-            'branch_id' => $other->id,
             'remaining_amount' => '1',
             'created_by' => 999,
             'ref_no' => 'HACK',
@@ -100,7 +106,7 @@ class ContractRequestTest extends TestCase
         $bm = $this->actingAs($this->bm);
 
         $bm->postJson('/requests', [])->assertUnprocessable()->assertJsonValidationErrors([
-            'full_name', 'id_number', 'birth_date', 'mobile', 'needs_electricity_bill', 'annual_rent',
+            'branch_id', 'full_name', 'id_number', 'birth_date', 'mobile', 'needs_electricity_bill', 'annual_rent',
             'insurance_amount', 'authentication_amount', 'rental_type', 'contract_duration_months',
             'rental_date', 'amount_paid', 'start_date',
         ]);

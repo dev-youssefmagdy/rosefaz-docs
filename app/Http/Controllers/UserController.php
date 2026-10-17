@@ -27,11 +27,11 @@ class UserController extends Controller
         $q = trim((string) $request->query('q', ''));
 
         $page = User::query()
-            ->with('branch:id,name,number')
+            ->with(['branch:id,name,number', 'branches:id,name,number'])
             ->withCount('createdRequests')
             ->when($q !== '', fn ($query) => $query->where(fn ($w) => $w->where('name', 'like', "%{$q}%")->orWhere('email', 'like', "%{$q}%")))
             ->when(Role::tryFrom((string) $request->query('role')), fn ($query, $role) => $query->where('role', $role))
-            ->when($request->filled('branch_id'), fn ($query) => $query->where('branch_id', (int) $request->query('branch_id')))
+            ->when($request->filled('branch_id'), fn ($query) => $query->whereHas('branches', fn ($q) => $q->where('branches.id', (int) $request->query('branch_id'))))
             ->when(in_array($request->query('status'), ['active', 'inactive'], true), fn ($query) => $query->where('is_active', $request->query('status') === 'active'))
             ->orderBy('name')
             ->paginate(10);
@@ -44,7 +44,10 @@ class UserController extends Controller
                 'role' => $u->role->value,
                 'role_label' => $u->role->label(),
                 'branch_id' => $u->branch_id,
-                'branch' => $u->branch?->only('id', 'name', 'number'),
+                'branch_ids' => $u->branches->pluck('id'),
+                'branch' => $u->branches->isNotEmpty()
+                    ? $u->branches->map(fn ($b) => $b->only('id', 'name', 'number'))
+                    : null,
                 'is_active' => $u->is_active,
                 'requests_count' => $u->created_requests_count,
                 'is_self' => $u->is(auth()->user()),
@@ -55,16 +58,20 @@ class UserController extends Controller
 
     public function store(StoreUserRequest $request): JsonResponse
     {
-        $user = new User($this->attributes($request));
+        [$attributes, $branchIds] = $this->attributes($request);
+        $user = new User($attributes);
         $user->is_active = $request->boolean('is_active');
         $user->save();
+        if ($branchIds !== null) {
+            $user->branches()->sync($branchIds);
+        }
 
         return response()->json(['message' => 'تمت إضافة المستخدم بنجاح.'], 201);
     }
 
     public function update(StoreUserRequest $request, User $user): JsonResponse
     {
-        $data = $this->attributes($request);
+        [$data, $branchIds] = $this->attributes($request);
         if (empty($data['password'])) {
             unset($data['password']);
         }
@@ -81,6 +88,11 @@ class UserController extends Controller
         $user->fill($data);
         $user->is_active = $request->boolean('is_active');
         $user->save();
+        if ($branchIds !== null) {
+            $user->branches()->sync($branchIds);
+        } else {
+            $user->branches()->detach();
+        }
 
         return response()->json(['message' => 'تم تحديث المستخدم بنجاح.']);
     }
@@ -110,14 +122,27 @@ class UserController extends Controller
         return response()->json(['message' => 'تم حذف المستخدم.']);
     }
 
-    /** Role decides the branch: general managers never belong to one. */
+    /**
+     * Returns [user attributes, branch_ids|null].
+     * General managers get null branch_ids (pivot cleared).
+     *
+     * @return array{0: array<string, mixed>, 1: int[]|null}
+     */
     private function attributes(StoreUserRequest $request): array
     {
         $data = $request->safe()->only(['name', 'email', 'password']);
         $data['role'] = Role::from($request->input('role'));
-        $data['branch_id'] = $data['role'] === Role::BranchManager ? (int) $request->input('branch_id') : null;
 
-        return $data;
+        if ($data['role'] === Role::BranchManager) {
+            $branchIds = array_map('intval', (array) $request->input('branch_ids', []));
+            $data['branch_id'] = $branchIds[0] ?? null;
+
+            return [$data, $branchIds];
+        }
+
+        $data['branch_id'] = null;
+
+        return [$data, null];
     }
 
     private function refuse(string $message): never

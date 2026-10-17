@@ -86,7 +86,7 @@ class ContractRequestController extends Controller
     {
         Gate::authorize('create', ContractRequest::class);
 
-        return view('requests.create', ['branch' => $request->user()->branch]);
+        return view('requests.create', ['branches' => $request->user()->branches()->orderBy('number')->get(['id', 'name', 'number'])]);
     }
 
     public function updateRefNo(Request $request, ContractRequest $contractRequest): JsonResponse

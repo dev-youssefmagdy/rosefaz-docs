@@ -9,7 +9,7 @@
     </div>
 
     <form id="request-form" class="rounded-xl bg-white shadow" novalidate>
-        @include('requests._document', ['request' => null, 'mode' => 'edit', 'branch' => $branch])
+        @include('requests._document', ['request' => null, 'mode' => 'edit', 'branch' => $branches->first(), 'branches' => $branches])
 
         <div class="flex flex-wrap items-center justify-between gap-3 border-t border-gray-200 p-4 print:hidden">
             <p class="text-sm text-gray-600">تنبيه: بعد إرسال الطلب لا يمكن تعديله أو حذفه.</p>
@@ -25,6 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
         storeUrl: @json(route('requests.store')),
         usersUrl: @json(route('lookups.users')),
         authUserId: @json(auth()->id()),
+        branches: @json($branches->values()),
     });
 });
 </script>

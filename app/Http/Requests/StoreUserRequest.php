@@ -22,11 +22,13 @@ class StoreUserRequest extends FormRequest
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($editing?->id)],
             'password' => [$editing ? 'nullable' : 'required', 'string', 'min:8'],
             'role' => ['required', Rule::enum(Role::class)],
-            'branch_id' => [
+            'branch_ids' => [
                 Rule::requiredIf($this->input('role') === Role::BranchManager->value),
                 'nullable',
-                Rule::exists('branches', 'id'),
+                'array',
+                'min:1',
             ],
+            'branch_ids.*' => ['integer', Rule::exists('branches', 'id')],
             'is_active' => ['required', 'boolean'],
         ];
     }
@@ -42,8 +44,9 @@ class StoreUserRequest extends FormRequest
             'password.min' => 'كلمة المرور يجب ألا تقل عن 8 أحرف.',
             'role.required' => 'الدور مطلوب.',
             'role.enum' => 'الدور غير صالح.',
-            'branch_id.required' => 'الفرع مطلوب لمدير الفرع.',
-            'branch_id.exists' => 'الفرع غير موجود.',
+            'branch_ids.required' => 'يجب اختيار فرع واحد على الأقل لمدير الفرع.',
+            'branch_ids.min' => 'يجب اختيار فرع واحد على الأقل.',
+            'branch_ids.*.exists' => 'أحد الفروع المحددة غير موجود.',
         ];
     }
 }

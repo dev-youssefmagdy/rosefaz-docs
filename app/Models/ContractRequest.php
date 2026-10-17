@@ -67,7 +67,7 @@ class ContractRequest extends Model
     {
         return $user->isGeneralManager()
             ? $query
-            : $query->where('branch_id', $user->branch_id ?? 0);
+            : $query->whereIn('branch_id', $user->branches()->pluck('branches.id'));
     }
 
     protected function birthDateHijri(): Attribute

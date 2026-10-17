@@ -87,6 +87,7 @@ function payload(form) {
     const el = form.elements;
     const bill = form.querySelector('input[name="needs_electricity_bill"]:checked');
     return {
+        branch_id: el.branch_id?.value ?? null,
         full_name: el.full_name.value,
         id_number: el.id_number.value,
         birth_date: el.birth_date.value,
@@ -105,11 +106,33 @@ function payload(form) {
     };
 }
 
-export function initRequestForm(form, { storeUrl, usersUrl, authUserId }) {
+function usersUrlForBranch(baseUrl, branchId) {
+    if (!branchId) return baseUrl;
+    const url = new URL(baseUrl, window.location.href);
+    url.searchParams.set('branch_id', branchId);
+    return url.toString();
+}
+
+export function initRequestForm(form, { storeUrl, usersUrl, authUserId, branches }) {
     bindDigitBoxes(form);
     bindHijri(form);
     bindRemaining(form);
-    loadUsers(form.elements.user_id, usersUrl, authUserId);
+
+    // Index branches by id for quick lookup: { id: { id, name, number } }
+    const branchMap = Object.fromEntries((branches ?? []).map((b) => [String(b.id), b]));
+    const branchNumberEl = form.querySelector('[data-branch-number]');
+
+    const branchSelect = form.elements.branch_id;
+    const initialBranchId = branchSelect?.value ?? null;
+    loadUsers(form.elements.user_id, usersUrlForBranch(usersUrl, initialBranchId), authUserId);
+
+    if (branchSelect && branchSelect.tagName === 'SELECT') {
+        branchSelect.addEventListener('change', () => {
+            const selected = branchMap[branchSelect.value];
+            if (branchNumberEl) branchNumberEl.textContent = selected?.number ?? '';
+            loadUsers(form.elements.user_id, usersUrlForBranch(usersUrl, branchSelect.value), authUserId);
+        });
+    }
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();

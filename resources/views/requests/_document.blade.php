@@ -1,6 +1,7 @@
 {{--
     Single source of truth for the "طلب توثيق عقد الكتروني" paper form.
-    Params: $request (ContractRequest|null), $mode ('edit'|'view'), $branch (Branch|null, defaults to $request->branch).
+    Params: $request (ContractRequest|null), $mode ('edit'|'view'), $branch (Branch|null, defaults to $request->branch),
+            $branches (Collection|null, available branches for selection in edit mode).
     edit: yellow cells hold inputs; view: the same cells show stored values.
 --}}
 @php
@@ -8,6 +9,7 @@
     $edit = ($mode ?? 'view') === 'edit';
     $adminEdit = $adminEdit ?? false;
     $branch = $branch ?? $r?->branch;
+    $branches = $branches ?? collect();
 
     $date = fn ($d) => $d ? $d->format('d/m/Y') : '';
     $iso = fn ($d) => $d ? $d->format('Y-m-d') : '';
@@ -51,7 +53,20 @@
                 {{-- الفرع | تاريخ الطلب --}}
                 <tr>
                     <th scope="row" colspan="2" class="{{ $ar }}">الفرع</th>
-                    <td colspan="2" class="{{ $white }}"><span class="{{ $static }}">{{ $branch?->name }}</span></td>
+                    <td colspan="2" class="{{ $edit && $branches->count() > 1 ? $yellow : $white }}">
+                        @if ($edit && $branches->count() > 1)
+                            <select name="branch_id" class="{{ $field }} cursor-pointer">
+                                @foreach ($branches as $b)
+                                    <option value="{{ $b->id }}" @selected($b->id === $branch?->id)>{{ $b->name }}</option>
+                                @endforeach
+                            </select>
+                        @else
+                            @if ($edit && $branches->count() === 1)
+                                <input type="hidden" name="branch_id" value="{{ $branches->first()?->id }}">
+                            @endif
+                            <span class="{{ $static }}">{{ $branch?->name }}</span>
+                        @endif
+                    </td>
                     <th colspan="2" class="{{ $en }}" dir="ltr">Branch</th>
                     <th scope="row" colspan="2" class="{{ $ar }}">تاريخ الطلب</th>
                     <td colspan="2" class="{{ $white }}"><span class="{{ $static }}" dir="ltr">{{ $r ? $date($r->request_date) : now()->format('d/m/Y') }}</span></td>
@@ -112,7 +127,7 @@
                 {{-- رقم الفرع --}}
                 <tr>
                     <th scope="row" colspan="2" class="{{ $ar }}">رقم الفرع</th>
-                    <td colspan="8" class="{{ $white }}"><span class="{{ $static }} text-base">{{ $branch?->number }}</span></td>
+                    <td colspan="8" class="{{ $white }}"><span class="{{ $static }} text-base" data-branch-number>{{ $branch?->number }}</span></td>
                     <th colspan="2" class="{{ $en }}" dir="ltr">Branch No.</th>
                 </tr>
 

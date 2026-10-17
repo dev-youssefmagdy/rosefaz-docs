@@ -21,12 +21,13 @@ class DatabaseSeeder extends Seeder
         foreach ([1, 2, 3] as $n) {
             $branch = Branch::updateOrCreate(['number' => $n], ['name' => "فرع $n", 'is_active' => true]);
 
-            User::updateOrCreate(['email' => "branch{$n}@rosefaz.test"], [
+            $user = User::updateOrCreate(['email' => "branch{$n}@rosefaz.test"], [
                 'name' => "مدير فرع $n",
                 'password' => 'password',
                 'role' => Role::BranchManager,
                 'branch_id' => $branch->id,
             ]);
+            $user->branches()->syncWithoutDetaching([$branch->id]);
         }
     }
 }

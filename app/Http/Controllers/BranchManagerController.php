@@ -25,6 +25,7 @@ class BranchManagerController extends Controller
         $user->role = Role::BranchManager;
         $user->branch_id = $branch->id;
         $user->save();
+        $user->branches()->syncWithoutDetaching([$branch->id]);
 
         return response()->json(['message' => 'تمت إضافة المدير بنجاح.', 'data' => $user->only('id', 'name', 'email')], 201);
     }

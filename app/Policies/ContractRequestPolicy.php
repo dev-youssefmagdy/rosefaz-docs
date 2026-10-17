@@ -15,12 +15,12 @@ class ContractRequestPolicy
     public function view(User $user, ContractRequest $request): bool
     {
         return $user->isGeneralManager()
-            || ($user->isBranchManager() && $user->branch_id !== null && $user->branch_id === $request->branch_id);
+            || ($user->isBranchManager() && $user->branches()->where('branches.id', $request->branch_id)->exists());
     }
 
     public function create(User $user): bool
     {
-        return $user->isBranchManager() && $user->branch_id !== null;
+        return $user->isBranchManager() && $user->branches()->exists();
     }
 
     public function update(User $user, ContractRequest $request): bool

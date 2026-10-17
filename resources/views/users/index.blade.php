@@ -74,14 +74,13 @@
                 <p data-error-for="role" class="{{ $err }}"></p>
             </div>
             <div id="branch-wrap">
-                <label class="block mb-1 text-sm">الفرع</label>
-                <select name="branch_id" class="{{ $input }}">
-                    <option value="">— اختر الفرع —</option>
+                <label class="block mb-1 text-sm">الفروع <span class="text-gray-400 text-xs">(يمكن اختيار أكثر من فرع)</span></label>
+                <select name="branch_ids[]" multiple class="{{ $input }}">
                     @foreach ($branches as $b)
                         <option value="{{ $b->id }}">{{ $b->name }}</option>
                     @endforeach
                 </select>
-                <p data-error-for="branch_id" class="{{ $err }}"></p>
+                <p data-error-for="branch_ids" class="{{ $err }}"></p>
             </div>
             <div>
                 <label class="block mb-1 text-sm">كلمة المرور</label>
@@ -102,10 +101,45 @@
 @endsection
 
 @push('scripts')
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+<style>
+    /* Fit Select2 into the existing Tailwind input style */
+    .select2-container--default .select2-selection--multiple {
+        border-color: #d1d5db;
+        border-radius: 0.375rem;
+        min-height: 2.5rem;
+        padding: 0.125rem 0.375rem;
+    }
+    .select2-container--default.select2-container--focus .select2-selection--multiple {
+        border-color: #be123c;
+        outline: none;
+        box-shadow: none;
+    }
+    .select2-container--default .select2-selection--multiple .select2-selection__choice {
+        background-color: #be123c;
+        color: #fff;
+        border: none;
+        border-radius: 0.25rem;
+        padding: 0.1rem 0.5rem;
+        margin: 0.15rem 0.15rem;
+    }
+    .select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
+        color: rgba(255,255,255,0.8);
+        margin-left: 0.25rem;
+        margin-right: 0;
+    }
+    .select2-container--default .select2-selection--multiple .select2-selection__choice__remove:hover { color: #fff; }
+    .select2-container { width: 100% !important; }
+    .select2-dropdown { border-color: #d1d5db; border-radius: 0.375rem; font-size: 0.875rem; }
+    .select2-results__option--highlighted { background-color: #be123c !important; }
+    .select2-search--dropdown .select2-search__field { border-color: #d1d5db; border-radius: 0.25rem; padding: 0.25rem 0.5rem; }
+</style>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     const { api, toast, showErrors, clearErrors, debounce, renderPagination, el, emptyRow } = window.App;
-    const $ = (s) => document.querySelector(s);
+    const qs = (s) => document.querySelector(s);
     const base = @json(url('/users'));
     const state = { q: '', role: '', branch: '', status: '', page: 1, items: {}, editing: null };
     const btn = 'rounded border border-gray-300 px-2 py-1 text-xs hover:bg-gray-50';
@@ -119,24 +153,37 @@ document.addEventListener('DOMContentLoaded', () => {
         } else toast(e.message || 'حدث خطأ غير متوقع.', 'error');
     };
 
-    const syncBranch = () => {
-        const f = $('#user-form');
-        $('#branch-wrap').classList.toggle('hidden', f.role.value !== 'branch_manager');
-    };
-    $('#user-form').role.addEventListener('change', syncBranch);
+    // Select2 on the branches multi-select
+    const $branchSel = jQuery('select[name="branch_ids[]"]');
+    $branchSel.select2({
+        dir: 'rtl',
+        placeholder: '— اختر الفروع —',
+        allowClear: true,
+        width: '100%',
+        dropdownParent: jQuery('#user-modal'),
+        language: {
+            noResults: () => 'لا توجد نتائج',
+            searching: () => 'جارٍ البحث…',
+        },
+    });
 
-    $('#gen-pass').addEventListener('click', () => {
+    const syncBranch = () => {
+        qs('#branch-wrap').classList.toggle('hidden', qs('#user-form').role.value !== 'branch_manager');
+    };
+    qs('#user-form').role.addEventListener('change', syncBranch);
+
+    qs('#gen-pass').addEventListener('click', () => {
         const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
         const bytes = crypto.getRandomValues(new Uint32Array(12));
-        $('#user-form').password.value = Array.from(bytes, (b) => chars[b % chars.length]).join('');
+        qs('#user-form').password.value = Array.from(bytes, (b) => chars[b % chars.length]).join('');
     });
 
     async function load() {
-        const qs = new URLSearchParams({ q: state.q, role: state.role, branch_id: state.branch, status: state.status, page: state.page });
+        const params = new URLSearchParams({ q: state.q, role: state.role, branch_id: state.branch, status: state.status, page: state.page });
         let res;
-        try { res = await api(`${base}/list?${qs}`); } catch (err) { fail(err); return; }
+        try { res = await api(`${base}/list?${params}`); } catch (err) { fail(err); return; }
         state.items = {};
-        const rows = $('#rows');
+        const rows = qs('#rows');
         if (!res.data.length) emptyRow(rows, 7, 'لا يوجد مستخدمون.');
         else rows.replaceChildren(...res.data.map((u) => {
             state.items[u.id] = u;
@@ -149,45 +196,47 @@ document.addEventListener('DOMContentLoaded', () => {
                 el('td', { class: 'p-2', text: u.is_self ? `${u.name} (أنت)` : u.name }),
                 el('td', { class: 'p-2', dir: 'ltr', text: u.email }),
                 el('td', { class: 'p-2', text: u.role_label }),
-                el('td', { class: 'p-2', text: u.branch ? u.branch.name : '—' }),
+                el('td', { class: 'p-2', text: u.branch ? u.branch.map((b) => b.name).join('، ') : '—' }),
                 el('td', { class: 'p-2', text: u.requests_count }),
                 el('td', { class: 'p-2' }, [el('span', { class: `rounded-full px-2 py-0.5 text-xs ${u.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-200 text-gray-700'}`, text: u.is_active ? 'فعّال' : 'موقوف' })]),
                 el('td', { class: 'p-2 flex gap-1' }, actions),
             ]);
         }));
-        renderPagination($('#pagination'), res.meta, (p) => { state.page = p; load(); });
+        renderPagination(qs('#pagination'), res.meta, (p) => { state.page = p; load(); });
     }
 
     const refilter = (key) => (e) => { state[key] = e.target.value.trim(); state.page = 1; load(); };
-    $('#search').addEventListener('input', debounce(refilter('q')));
-    $('#filter-role').addEventListener('change', refilter('role'));
-    $('#filter-branch').addEventListener('change', refilter('branch'));
-    $('#filter-status').addEventListener('change', refilter('status'));
+    qs('#search').addEventListener('input', debounce(refilter('q')));
+    qs('#filter-role').addEventListener('change', refilter('role'));
+    qs('#filter-branch').addEventListener('change', refilter('branch'));
+    qs('#filter-status').addEventListener('change', refilter('status'));
 
-    $('#add-btn').addEventListener('click', () => {
-        const f = $('#user-form');
+    qs('#add-btn').addEventListener('click', () => {
+        const f = qs('#user-form');
         state.editing = null; f.reset(); clearErrors(f);
+        $branchSel.val([]).trigger('change');
         f.is_active.checked = true;
         f.password.placeholder = 'كلمة المرور (8 أحرف على الأقل)';
-        $('#user-title').textContent = 'إضافة مستخدم';
+        qs('#user-title').textContent = 'إضافة مستخدم';
         syncBranch();
-        open($('#user-modal'));
+        open(qs('#user-modal'));
     });
 
-    $('#rows').addEventListener('click', async (e) => {
+    qs('#rows').addEventListener('click', async (e) => {
         const b = e.target.closest('button[data-act]');
         if (!b) return;
         const u = state.items[b.dataset.id];
         if (b.dataset.act === 'edit') {
-            const f = $('#user-form');
+            const f = qs('#user-form');
             state.editing = u.id; f.reset(); clearErrors(f);
             f.name.value = u.name; f.email.value = u.email; f.role.value = u.role;
-            f.branch_id.value = u.branch_id ?? ''; f.is_active.checked = u.is_active; f.password.value = '';
+            $branchSel.val(u.branch_ids ?? []).trigger('change');
+            f.is_active.checked = u.is_active; f.password.value = '';
             f.password.placeholder = 'كلمة مرور جديدة (اختياري)';
             f.role.disabled = u.is_self; f.is_active.disabled = u.is_self;
-            $('#user-title').textContent = 'تعديل مستخدم';
+            qs('#user-title').textContent = 'تعديل مستخدم';
             syncBranch();
-            open($('#user-modal'));
+            open(qs('#user-modal'));
         } else if (b.dataset.act === 'toggle') {
             try { toast((await api(`${base}/${u.id}/toggle`, { method: 'PATCH' })).message); load(); } catch (err) { fail(err); }
         } else if (window.confirm(`حذف المستخدم ${u.name}؟`)) {
@@ -195,20 +244,21 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    $('#user-form').addEventListener('submit', async (e) => {
+    qs('#user-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const f = e.target;
         clearErrors(f);
         const self = state.editing && state.items[state.editing].is_self;
+        const branchIds = Array.from(f['branch_ids[]'].selectedOptions).map((o) => parseInt(o.value, 10));
         const body = {
             name: f.name.value, email: f.email.value, password: f.password.value,
             role: self ? state.items[state.editing].role : f.role.value,
-            branch_id: f.branch_id.value || null,
+            branch_ids: branchIds.length ? branchIds : null,
             is_active: self ? true : f.is_active.checked,
         };
         try {
             const r = await api(state.editing ? `${base}/${state.editing}` : base, { method: state.editing ? 'PUT' : 'POST', body });
-            toast(r.message); close($('#user-modal')); load();
+            toast(r.message); close(qs('#user-modal')); load();
         } catch (err) { fail(err, f); }
     });
 

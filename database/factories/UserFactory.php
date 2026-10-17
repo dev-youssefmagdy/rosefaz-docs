@@ -38,6 +38,15 @@ class UserFactory extends Factory
         ];
     }
 
+    public function configure(): static
+    {
+        return $this->afterCreating(function (User $user) {
+            if ($user->branch_id !== null && $user->isBranchManager()) {
+                $user->branches()->syncWithoutDetaching([$user->branch_id]);
+            }
+        });
+    }
+
     public function generalManager(): static
     {
         return $this->state(fn () => ['role' => Role::GeneralManager, 'branch_id' => null]);

@@ -35,6 +35,7 @@ class StoreContractRequestRequest extends FormRequest
         $money = ['required', 'numeric', 'min:0', 'max:9999999999.99', 'decimal:0,2'];
 
         return [
+            'branch_id' => ['required', 'integer', Rule::exists('branch_user', 'branch_id')->where('user_id', $this->user()->id)],
             'full_name' => ['required', 'string', 'max:255'],
             'id_number' => ['required', 'digits:10'],
             'birth_date' => ['required', 'date', 'before:today'],
@@ -55,6 +56,8 @@ class StoreContractRequestRequest extends FormRequest
     public function messages(): array
     {
         return [
+            'branch_id.required' => 'الفرع مطلوب.',
+            'branch_id.exists' => 'الفرع المحدد غير مرتبط بحسابك.',
             'full_name.required' => 'الاسم الرباعي مطلوب.',
             'full_name.max' => 'الاسم طويل جدًا.',
             'id_number.required' => 'رقم السجل مطلوب.',

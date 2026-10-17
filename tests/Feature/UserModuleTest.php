@@ -50,7 +50,7 @@ class UserModuleTest extends TestCase
             'name' => 'BM', 'email' => 'bm@x.test', 'password' => 'secret-pass', 'role' => 'branch_manager',
             'branch_ids' => [$branch->id], 'is_active' => true,
         ])->assertCreated();
-        $this->assertDatabaseHas('users', ['email' => 'bm@x.test', 'branch_id' => $branch->id, 'role' => 'branch_manager']);
+        $this->assertDatabaseHas('users', ['email' => 'bm@x.test', 'role' => 'branch_manager']);
         $this->assertDatabaseHas('branch_user', ['branch_id' => $branch->id]);
 
         // a general manager never gets a branch even if one is sent
@@ -58,7 +58,7 @@ class UserModuleTest extends TestCase
             'name' => 'GM2', 'email' => 'gm2@x.test', 'password' => 'secret-pass', 'role' => 'general_manager',
             'branch_ids' => [$branch->id], 'is_active' => true,
         ])->assertCreated();
-        $this->assertDatabaseHas('users', ['email' => 'gm2@x.test', 'branch_id' => null, 'role' => 'general_manager']);
+        $this->assertDatabaseHas('users', ['email' => 'gm2@x.test', 'role' => 'general_manager']);
     }
 
     public function test_validation(): void
@@ -85,8 +85,7 @@ class UserModuleTest extends TestCase
             'branch_ids' => [$other->id], 'is_active' => true,
         ])->assertOk();
         $this->assertSame($old, $bm->fresh()->password);
-        $this->assertSame($other->id, $bm->fresh()->branch_id);
-        $this->assertDatabaseHas('branch_user', ['branch_id' => $other->id]);
+        $this->assertDatabaseHas('branch_user', ['branch_id' => $other->id, 'user_id' => $bm->id]);
 
         $this->actingAs($gm)->putJson("/users/{$bm->id}", [
             'name' => 'New', 'email' => $bm->email, 'password' => 'brand-new-pass', 'role' => 'branch_manager',
@@ -117,7 +116,8 @@ class UserModuleTest extends TestCase
         $this->assertFalse($bm->fresh()->is_active);
 
         $busy = User::factory()->branchManager()->create();
-        ContractRequest::factory()->create(['created_by' => $busy->id, 'branch_id' => $busy->branch_id]);
+        $busyBranch = $busy->branches()->first();
+        ContractRequest::factory()->create(['created_by' => $busy->id, 'branch_id' => $busyBranch->id]);
         $this->actingAs($gm)->deleteJson("/users/{$busy->id}")->assertUnprocessable();
         $this->assertModelExists($busy);
 

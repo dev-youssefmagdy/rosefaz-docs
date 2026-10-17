@@ -15,7 +15,7 @@ class RequestNoteController extends Controller
         Gate::authorize('viewAny', [RequestNote::class, $contractRequest]);
 
         $notes = $contractRequest->notes()
-            ->with('user.branch:id,name,number')
+            ->with('user.branches:id,name,number')
             ->orderByDesc('created_at')
             ->orderByDesc('id')
             ->get();
@@ -33,7 +33,7 @@ class RequestNoteController extends Controller
         $note->contract_request_id = $contractRequest->id;
         $note->user_id = $request->user()->id;
         $note->save();
-        $note->load('user.branch:id,name,number');
+        $note->load('user.branches:id,name,number');
 
         return response()->json(['message' => 'تمت إضافة الملاحظة.', 'data' => $this->format($note)], 201);
     }
@@ -45,7 +45,7 @@ class RequestNoteController extends Controller
             'body' => $n->body,
             'author' => $n->user?->name,
             'role' => $n->user?->role?->label(),
-            'branch' => $n->user?->branch?->name,
+            'branch' => $n->user?->branches?->first()?->name,
             'created_at' => $n->created_at?->format('d/m/Y H:i'),
         ];
     }

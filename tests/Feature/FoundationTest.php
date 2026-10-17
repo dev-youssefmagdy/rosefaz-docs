@@ -65,7 +65,7 @@ class FoundationTest extends TestCase
         foreach ([1, 2, 3] as $n) {
             $bm = User::where('email', "branch{$n}@rosefaz.test")->first();
             $this->assertTrue($bm->isBranchManager());
-            $this->assertSame($n, $bm->branch->number);
+            $this->assertSame($n, $bm->branches()->first()->number);
         }
     }
 }

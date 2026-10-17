@@ -48,9 +48,10 @@ class BranchTest extends TestCase
     public function test_branch_manager_forbidden(): void
     {
         $bm = User::factory()->branchManager()->create();
+        $bmBranch = $bm->branches()->first();
         $this->actingAs($bm)->get('/branches')->assertForbidden();
         $this->actingAs($bm)->postJson('/branches', ['name' => 'x', 'number' => 9])->assertForbidden();
-        $this->actingAs($bm)->getJson('/branches/'.$bm->branch_id.'/managers')->assertForbidden();
+        $this->actingAs($bm)->getJson("/branches/{$bmBranch->id}/managers")->assertForbidden();
     }
 
     public function test_managers_crud(): void
@@ -58,10 +59,10 @@ class BranchTest extends TestCase
         $branch = Branch::factory()->create();
         $gm = $this->actingAs($this->gm());
 
-        $gm->postJson("/branches/{$branch->id}/managers", ['name' => 'M', 'email' => 'm@x.test', 'password' => 'secret123', 'branch_id' => 999])->assertCreated();
+        $gm->postJson("/branches/{$branch->id}/managers", ['name' => 'M', 'email' => 'm@x.test', 'password' => 'secret123'])->assertCreated();
         $user = User::where('email', 'm@x.test')->first();
-        $this->assertSame($branch->id, $user->branch_id);
         $this->assertTrue($user->isBranchManager());
+        $this->assertDatabaseHas('branch_user', ['branch_id' => $branch->id, 'user_id' => $user->id]);
 
         $gm->getJson("/branches/{$branch->id}/managers")->assertOk()->assertJsonCount(1, 'data');
         $gm->putJson("/branches/{$branch->id}/managers/{$user->id}", ['name' => 'N', 'email' => 'm@x.test'])->assertOk();

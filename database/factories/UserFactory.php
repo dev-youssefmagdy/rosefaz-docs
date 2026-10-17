@@ -14,16 +14,8 @@ use Illuminate\Support\Str;
  */
 class UserFactory extends Factory
 {
-    /**
-     * The current password being used by the factory.
-     */
     protected static ?string $password;
 
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
     public function definition(): array
     {
         return [
@@ -33,33 +25,25 @@ class UserFactory extends Factory
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
             'role' => Role::BranchManager,
-            'branch_id' => Branch::factory(),
             'is_active' => true,
         ];
     }
 
-    public function configure(): static
-    {
-        return $this->afterCreating(function (User $user) {
-            if ($user->branch_id !== null && $user->isBranchManager()) {
-                $user->branches()->syncWithoutDetaching([$user->branch_id]);
-            }
-        });
-    }
-
     public function generalManager(): static
     {
-        return $this->state(fn () => ['role' => Role::GeneralManager, 'branch_id' => null]);
+        return $this->state(fn () => ['role' => Role::GeneralManager]);
     }
 
     public function branchManager(?Branch $branch = null): static
     {
-        return $this->state(fn () => ['role' => Role::BranchManager, 'branch_id' => $branch?->id ?? Branch::factory()]);
+        $branch ??= Branch::factory()->create();
+
+        return $this->state(fn () => ['role' => Role::BranchManager])
+            ->afterCreating(function (User $user) use ($branch) {
+                $user->branches()->syncWithoutDetaching([$branch->id]);
+            });
     }
 
-    /**
-     * Indicate that the model's email address should be unverified.
-     */
     public function unverified(): static
     {
         return $this->state(fn (array $attributes) => [

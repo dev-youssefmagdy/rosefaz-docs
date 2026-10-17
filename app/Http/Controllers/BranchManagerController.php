@@ -23,7 +23,6 @@ class BranchManagerController extends Controller
     {
         $user = new User($request->validated());
         $user->role = Role::BranchManager;
-        $user->branch_id = $branch->id;
         $user->save();
         $user->branches()->syncWithoutDetaching([$branch->id]);
 
@@ -58,6 +57,6 @@ class BranchManagerController extends Controller
 
     private function ensureBelongs(Branch $branch, User $user): void
     {
-        abort_unless($user->branch_id === $branch->id && $user->role === Role::BranchManager, 404);
+        abort_unless($user->role === Role::BranchManager && $user->branches()->where('branches.id', $branch->id)->exists(), 404);
     }
 }

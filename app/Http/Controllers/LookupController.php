@@ -24,7 +24,7 @@ class LookupController extends Controller
 
         $users = User::query()
             ->where('is_active', true)
-            ->when($allowedBranchIds, fn ($q) => $q->whereIn('branch_id', $allowedBranchIds))
+            ->when($allowedBranchIds, fn ($q) => $q->whereHas('branches', fn ($b) => $b->whereIn('branches.id', $allowedBranchIds)))
             ->orderBy('name')
             ->get(['id', 'name']);
 

@@ -15,7 +15,6 @@ class DatabaseSeeder extends Seeder
             'name' => 'المدير العام',
             'password' => 'password',
             'role' => Role::GeneralManager,
-            'branch_id' => null,
         ]);
 
         foreach ([1, 2, 3] as $n) {
@@ -25,7 +24,6 @@ class DatabaseSeeder extends Seeder
                 'name' => "مدير فرع $n",
                 'password' => 'password',
                 'role' => Role::BranchManager,
-                'branch_id' => $branch->id,
             ]);
             $user->branches()->syncWithoutDetaching([$branch->id]);
         }

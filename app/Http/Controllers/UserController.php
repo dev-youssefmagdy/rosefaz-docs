@@ -27,7 +27,7 @@ class UserController extends Controller
         $q = trim((string) $request->query('q', ''));
 
         $page = User::query()
-            ->with(['branch:id,name,number', 'branches:id,name,number'])
+            ->with(['branches:id,name,number'])
             ->withCount('createdRequests')
             ->when($q !== '', fn ($query) => $query->where(fn ($w) => $w->where('name', 'like', "%{$q}%")->orWhere('email', 'like', "%{$q}%")))
             ->when(Role::tryFrom((string) $request->query('role')), fn ($query, $role) => $query->where('role', $role))
@@ -43,7 +43,6 @@ class UserController extends Controller
                 'email' => $u->email,
                 'role' => $u->role->value,
                 'role_label' => $u->role->label(),
-                'branch_id' => $u->branch_id,
                 'branch_ids' => $u->branches->pluck('id'),
                 'branch' => $u->branches->isNotEmpty()
                     ? $u->branches->map(fn ($b) => $b->only('id', 'name', 'number'))
@@ -135,12 +134,9 @@ class UserController extends Controller
 
         if ($data['role'] === Role::BranchManager) {
             $branchIds = array_map('intval', (array) $request->input('branch_ids', []));
-            $data['branch_id'] = $branchIds[0] ?? null;
 
             return [$data, $branchIds];
         }
-
-        $data['branch_id'] = null;
 
         return [$data, null];
     }

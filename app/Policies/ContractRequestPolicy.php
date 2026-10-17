@@ -25,7 +25,7 @@ class ContractRequestPolicy
 
     public function update(User $user, ContractRequest $request): bool
     {
-        return false;
+        return $user->isGeneralManager();
     }
 
     public function updateRefNo(User $user, ContractRequest $request): bool
@@ -35,6 +35,6 @@ class ContractRequestPolicy
 
     public function delete(User $user, ContractRequest $request): bool
     {
-        return false;
+        return $user->isGeneralManager();
     }
 }

@@ -155,19 +155,47 @@ class ContractRequestTest extends TestCase
         $this->assertSame(4, ContractRequest::forUser($gm)->count());
     }
 
-    public function test_requests_cannot_be_updated_or_deleted(): void
+    public function test_branch_manager_cannot_update_or_delete(): void
     {
         $r = ContractRequest::factory()->create(['branch_id' => $this->branch->id, 'created_by' => $this->bm->id]);
-        $gm = User::factory()->generalManager()->create();
 
-        foreach ([$this->bm, $gm] as $user) {
-            $this->assertFalse($user->can('update', $r));
-            $this->assertFalse($user->can('delete', $r));
-            foreach (['putJson', 'patchJson', 'deleteJson'] as $method) {
-                $this->assertContains($this->actingAs($user)->{$method}("/requests/{$r->id}", ['full_name' => 'x'])->status(), [404, 405]);
-            }
-        }
-        $this->assertNotSame('x', $r->fresh()->full_name);
+        $this->assertFalse($this->bm->can('update', $r));
+        $this->assertFalse($this->bm->can('delete', $r));
+        $this->actingAs($this->bm)->putJson("/requests/{$r->id}", [])->assertForbidden();
+        $this->actingAs($this->bm)->deleteJson("/requests/{$r->id}")->assertForbidden();
+    }
+
+    public function test_general_manager_can_update_request(): void
+    {
+        $gm = User::factory()->generalManager()->create();
+        $r = ContractRequest::factory()->create(['branch_id' => $this->branch->id, 'created_by' => $this->bm->id]);
+        $otherBranch = Branch::factory()->create();
+        $responsible = User::factory()->branchManager($otherBranch)->create();
+
+        $this->assertTrue($gm->can('update', $r));
+
+        $this->actingAs($gm)->get("/requests/{$r->id}/edit")->assertOk()->assertSee('تعديل');
+
+        $payload = array_merge($this->payload(), [
+            'branch_id' => $otherBranch->id,
+            'user_id' => $responsible->id,
+            'full_name' => 'اسم محدث',
+        ]);
+        $res = $this->actingAs($gm)->putJson("/requests/{$r->id}", $payload)->assertOk();
+        $this->assertSame('اسم محدث', $r->fresh()->full_name);
+        $this->assertSame($otherBranch->id, $r->fresh()->branch_id);
+        $this->assertNotEmpty($res->json('url'));
+    }
+
+    public function test_general_manager_can_delete_request(): void
+    {
+        $gm = User::factory()->generalManager()->create();
+        $r = ContractRequest::factory()->create(['branch_id' => $this->branch->id, 'created_by' => $this->bm->id]);
+
+        $this->assertTrue($gm->can('delete', $r));
+
+        $this->actingAs($gm)->delete("/requests/{$r->id}")->assertRedirect(route('requests.index'));
+        $this->assertNull($r->fresh());
     }
 
     public function test_view_policy(): void

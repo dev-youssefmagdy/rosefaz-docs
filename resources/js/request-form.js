@@ -113,7 +113,7 @@ function usersUrlForBranch(baseUrl, branchId) {
     return url.toString();
 }
 
-export function initRequestForm(form, { storeUrl, usersUrl, authUserId, branches }) {
+export function initRequestForm(form, { storeUrl, updateUrl, usersUrl, authUserId, initialUserId, branches }) {
     bindDigitBoxes(form);
     bindHijri(form);
     bindRemaining(form);
@@ -124,26 +124,27 @@ export function initRequestForm(form, { storeUrl, usersUrl, authUserId, branches
 
     const branchSelect = form.elements.branch_id;
     const initialBranchId = branchSelect?.value ?? null;
-    loadUsers(form.elements.user_id, usersUrlForBranch(usersUrl, initialBranchId), authUserId);
+    loadUsers(form.elements.user_id, usersUrlForBranch(usersUrl, initialBranchId), initialUserId ?? authUserId);
 
     if (branchSelect && branchSelect.tagName === 'SELECT') {
         branchSelect.addEventListener('change', () => {
             const selected = branchMap[branchSelect.value];
             if (branchNumberEl) branchNumberEl.textContent = selected?.number ?? '';
-            loadUsers(form.elements.user_id, usersUrlForBranch(usersUrl, branchSelect.value), authUserId);
+            loadUsers(form.elements.user_id, usersUrlForBranch(usersUrl, branchSelect.value), null);
         });
     }
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
-        if (!window.confirm('بعد الإرسال لا يمكن التعديل. هل تريد إرسال الطلب؟')) return;
+        const isUpdate = Boolean(updateUrl);
+        if (!isUpdate && !window.confirm('بعد الإرسال لا يمكن التعديل. هل تريد إرسال الطلب؟')) return;
 
         const submit = form.querySelector('[type="submit"]');
         submit?.setAttribute('disabled', 'disabled');
         clearErrors(form);
         try {
-            const res = await api(storeUrl, { method: 'POST', body: payload(form) });
-            toast(res.message || 'تم إرسال الطلب بنجاح.');
+            const res = await api(isUpdate ? updateUrl : storeUrl, { method: isUpdate ? 'PUT' : 'POST', body: payload(form) });
+            toast(res.message || (isUpdate ? 'تم تحديث الطلب بنجاح.' : 'تم إرسال الطلب بنجاح.'));
             window.location.assign(res.url);
         } catch (err) {
             submit?.removeAttribute('disabled');
@@ -152,7 +153,7 @@ export function initRequestForm(form, { storeUrl, usersUrl, authUserId, branches
                 toast('يرجى تصحيح الأخطاء الموضحة في النموذج.', 'error');
                 form.querySelector('[data-error-for]:not(.hidden)')?.closest('td')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
             } else if (err.status === 403) {
-                toast('غير مصرح لك بإنشاء طلب.', 'error');
+                toast('غير مصرح لك بهذا الإجراء.', 'error');
             } else {
                 toast(err.message || 'حدث خطأ غير متوقع.', 'error');
             }

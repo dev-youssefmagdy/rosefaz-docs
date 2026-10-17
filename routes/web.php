@@ -28,6 +28,9 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('/create', [ContractRequestController::class, 'create'])->name('create');
         Route::post('/', [ContractRequestController::class, 'store'])->name('store');
         Route::get('/{contractRequest}', [ContractRequestController::class, 'show'])->whereNumber('contractRequest')->name('show');
+        Route::get('/{contractRequest}/edit', [ContractRequestController::class, 'edit'])->whereNumber('contractRequest')->name('edit');
+        Route::put('/{contractRequest}', [ContractRequestController::class, 'update'])->whereNumber('contractRequest')->name('update');
+        Route::delete('/{contractRequest}', [ContractRequestController::class, 'destroy'])->whereNumber('contractRequest')->name('destroy');
         Route::patch('/{contractRequest}/ref-no', [ContractRequestController::class, 'updateRefNo'])->whereNumber('contractRequest')->name('ref-no.update');
         Route::get('/{contractRequest}/notes', [RequestNoteController::class, 'index'])->whereNumber('contractRequest')->name('notes.index');
         Route::post('/{contractRequest}/notes', [RequestNoteController::class, 'store'])->whereNumber('contractRequest')->name('notes.store');

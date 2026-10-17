@@ -7,6 +7,9 @@
         <h1 class="text-xl font-bold">طلب توثيق عقد <span dir="ltr">{{ $contractRequest->ref_no }}</span></h1>
         <div class="flex gap-2">
             <a href="{{ route('requests.index') }}" class="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm hover:bg-gray-50">رجوع إلى الطلبات</a>
+            @can('update', $contractRequest)
+                <a href="{{ route('requests.edit', $contractRequest) }}" class="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm hover:bg-gray-50">تعديل</a>
+            @endcan
             <button type="button" onclick="window.print()" class="rounded-md bg-rose-700 px-4 py-2 text-sm font-bold text-white hover:bg-rose-800">طباعة</button>
         </div>
     </div>

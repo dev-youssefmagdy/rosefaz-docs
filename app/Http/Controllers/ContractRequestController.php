@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreContractRequestRequest;
+use App\Http\Requests\UpdateContractRequestRequest;
 use App\Models\Branch;
 use App\Models\ContractRequest;
 use App\Models\RequestNote;
@@ -105,6 +106,45 @@ class ContractRequestController extends Controller
         $contractRequest->save();
 
         return response()->json(['message' => 'تم حفظ رقم العقد بنجاح.', 'ref_no' => $contractRequest->ref_no]);
+    }
+
+    public function edit(Request $request, ContractRequest $contractRequest)
+    {
+        Gate::authorize('update', $contractRequest);
+
+        $contractRequest->load(['branch', 'responsibleUser']);
+        $branches = Branch::orderBy('number')->get(['id', 'name', 'number']);
+
+        return view('requests.edit', [
+            'contractRequest' => $contractRequest,
+            'branches' => $branches,
+        ]);
+    }
+
+    public function update(UpdateContractRequestRequest $request, ContractRequest $contractRequest): JsonResponse
+    {
+        $data = $request->validated();
+
+        $totalRent = bcmul((string) $data['annual_rent'], (string) $data['contract_duration_months'], 2);
+        $contractRequest->fill($data);
+        $contractRequest->branch_id = (int) $data['branch_id'];
+        $contractRequest->user_id = (int) $data['user_id'];
+        $contractRequest->remaining_amount = bcsub($totalRent, (string) $data['amount_paid'], 2);
+        $contractRequest->save();
+
+        return response()->json([
+            'message' => 'تم تحديث الطلب بنجاح.',
+            'url' => route('requests.show', $contractRequest),
+        ]);
+    }
+
+    public function destroy(Request $request, ContractRequest $contractRequest)
+    {
+        Gate::authorize('delete', $contractRequest);
+
+        $contractRequest->delete();
+
+        return redirect()->route('requests.index')->with('success', 'تم حذف الطلب بنجاح.');
     }
 
     public function store(StoreContractRequestRequest $request, ContractRequestService $service): JsonResponse

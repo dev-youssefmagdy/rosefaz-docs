@@ -78,7 +78,7 @@
                     <th scope="row" colspan="2" class="{{ $ar }}">الاسم الرباعي</th>
                     <td colspan="8" class="{{ $yellow }}">
                         @if ($edit)
-                            <input type="text" name="full_name" maxlength="255" autocomplete="off" class="{{ $field }}" aria-label="الاسم الرباعي">
+                            <input type="text" name="full_name" maxlength="255" autocomplete="off" value="{{ $r?->full_name }}" class="{{ $field }}" aria-label="الاسم الرباعي">
                             <p data-error-for="full_name" class="{{ $err }}"></p>
                         @else
                             <span class="{{ $static }}">{{ $r?->full_name }}</span>
@@ -102,7 +102,7 @@
                     <th scope="row" colspan="2" class="{{ $ar }}">تاريخ الميلاد</th>
                     <td colspan="2" class="{{ $yellow }}">
                         @if ($edit)
-                            <input type="date" name="birth_date" max="{{ now()->subDay()->format('Y-m-d') }}" class="{{ $field }}" aria-label="تاريخ الميلاد">
+                            <input type="date" name="birth_date" max="{{ now()->subDay()->format('Y-m-d') }}" value="{{ $iso($r?->birth_date) }}" class="{{ $field }}" aria-label="تاريخ الميلاد">
                             <p data-error-for="birth_date" class="{{ $err }}"></p>
                         @else
                             <span class="{{ $static }}" dir="ltr">{{ $date($r?->birth_date) }}</span>
@@ -136,7 +136,7 @@
                     <th scope="row" colspan="2" class="{{ $ar }}">رقم الشقة</th>
                     <td colspan="2" class="{{ $yellow }}">
                         @if ($edit)
-                            <input type="text" name="apartment_no" maxlength="50" autocomplete="off" class="{{ $field }}" aria-label="رقم الشقة">
+                            <input type="text" name="apartment_no" maxlength="50" autocomplete="off" value="{{ $r?->apartment_no }}" class="{{ $field }}" aria-label="رقم الشقة">
                             <p data-error-for="apartment_no" class="{{ $err }}"></p>
                         @else
                             <span class="{{ $static }}">{{ $r?->apartment_no }}</span>
@@ -148,10 +148,10 @@
                         @if ($edit)
                             <div class="flex items-center justify-center gap-1.5" dir="ltr" role="radiogroup" aria-label="يتطلب فاتورة كهرباء">
                                 <label class="cursor-pointer border border-black px-2 py-0.5 text-sm font-bold text-red-600 has-checked:bg-red-600 has-checked:text-white">
-                                    <input type="radio" name="needs_electricity_bill" value="1" class="sr-only">YES
+                                    <input type="radio" name="needs_electricity_bill" value="1" @checked($r?->needs_electricity_bill === true) class="sr-only">YES
                                 </label>
                                 <label class="cursor-pointer border border-black px-2 py-0.5 text-sm font-bold has-checked:bg-black has-checked:text-white">
-                                    <input type="radio" name="needs_electricity_bill" value="0" class="sr-only">NO
+                                    <input type="radio" name="needs_electricity_bill" value="0" @checked($r?->needs_electricity_bill === false) class="sr-only">NO
                                 </label>
                             </div>
                             <p data-error-for="needs_electricity_bill" class="{{ $err }}"></p>
@@ -167,7 +167,7 @@
                     <th scope="row" colspan="2" class="{{ $ar }}">قيمة الإيجار</th>
                     <td colspan="2" class="{{ $yellow }}">
                         @if ($edit)
-                            <input type="number" name="annual_rent" min="0" step="0.01" inputmode="decimal" dir="ltr" class="{{ $field }}" aria-label="قيمة الإيجار">
+                            <input type="number" name="annual_rent" min="0" step="0.01" inputmode="decimal" dir="ltr" value="{{ $r?->annual_rent }}" class="{{ $field }}" aria-label="قيمة الإيجار">
                             <p data-error-for="annual_rent" class="{{ $err }}"></p>
                         @else
                             <span class="{{ $static }}" dir="ltr">{{ $money($r?->annual_rent) }}</span>
@@ -177,7 +177,7 @@
                     <th scope="row" colspan="2" class="{{ $ar }}">مبلغ التأمين</th>
                     <td colspan="2" class="{{ $yellow }}">
                         @if ($edit)
-                            <input type="number" name="insurance_amount" min="0" step="0.01" inputmode="decimal" dir="ltr" class="{{ $field }}" aria-label="مبلغ التأمين">
+                            <input type="number" name="insurance_amount" min="0" step="0.01" inputmode="decimal" dir="ltr" value="{{ $r?->insurance_amount }}" class="{{ $field }}" aria-label="مبلغ التأمين">
                             <p data-error-for="insurance_amount" class="{{ $err }}"></p>
                         @else
                             <span class="{{ $static }}" dir="ltr">{{ $money($r?->insurance_amount) }}</span>
@@ -191,7 +191,7 @@
                     <th scope="row" colspan="2" class="{{ $ar }}">قيمة التوثيق</th>
                     <td colspan="8" class="{{ $yellow }}">
                         @if ($edit)
-                            <input type="number" name="authentication_amount" min="0" step="0.01" inputmode="decimal" dir="ltr" class="{{ $field }}" aria-label="قيمة التوثيق">
+                            <input type="number" name="authentication_amount" min="0" step="0.01" inputmode="decimal" dir="ltr" value="{{ $r?->authentication_amount }}" class="{{ $field }}" aria-label="قيمة التوثيق">
                             <p data-error-for="authentication_amount" class="{{ $err }}"></p>
                         @else
                             <span class="{{ $static }}" dir="ltr">{{ $money($r?->authentication_amount) }}</span>
@@ -208,7 +208,7 @@
                             <select name="rental_type" class="{{ $field }}" aria-label="نوع الايجار">
                                 <option value="">—</option>
                                 @foreach (\App\Enums\RentalType::cases() as $type)
-                                    <option value="{{ $type->value }}">{{ $type->label() }}</option>
+                                    <option value="{{ $type->value }}" @selected($r?->rental_type === $type)>{{ $type->label() }}</option>
                                 @endforeach
                             </select>
                             <p data-error-for="rental_type" class="{{ $err }}"></p>
@@ -220,7 +220,7 @@
                     <th scope="row" colspan="2" class="{{ $ar }}">مدة العقد <span class="text-[10px] font-normal">(شهر)</span></th>
                     <td colspan="2" class="{{ $yellow }}">
                         @if ($edit)
-                            <input type="number" name="contract_duration_months" min="1" max="600" step="1" value="12" inputmode="numeric" dir="ltr" class="{{ $field }}" aria-label="مدة العقد بالأشهر">
+                            <input type="number" name="contract_duration_months" min="1" max="600" step="1" value="{{ $r?->contract_duration_months ?? 12 }}" inputmode="numeric" dir="ltr" class="{{ $field }}" aria-label="مدة العقد بالأشهر">
                             <p data-error-for="contract_duration_months" class="{{ $err }}"></p>
                         @else
                             <span class="{{ $static }}">{{ $r?->contract_duration_months }} @if ($r) شهر @endif</span>
@@ -234,7 +234,7 @@
                     <th scope="row" colspan="2" class="{{ $ar }}">تاريخ الايجار</th>
                     <td colspan="8" class="{{ $yellow }}">
                         @if ($edit)
-                            <input type="date" name="rental_date" class="{{ $field }} mx-auto max-w-56" aria-label="تاريخ الايجار">
+                            <input type="date" name="rental_date" value="{{ $iso($r?->rental_date) }}" class="{{ $field }} mx-auto max-w-56" aria-label="تاريخ الايجار">
                             <p data-error-for="rental_date" class="{{ $err }}"></p>
                         @else
                             <span class="{{ $static }}" dir="ltr">{{ $date($r?->rental_date) }}</span>
@@ -248,7 +248,7 @@
                     <th scope="row" colspan="2" class="{{ $ar }}">المبلغ المدفوع</th>
                     <td colspan="2" class="{{ $yellow }}">
                         @if ($edit)
-                            <input type="number" name="amount_paid" min="0" step="0.01" inputmode="decimal" dir="ltr" class="{{ $field }}" aria-label="المبلغ المدفوع">
+                            <input type="number" name="amount_paid" min="0" step="0.01" inputmode="decimal" dir="ltr" value="{{ $r?->amount_paid }}" class="{{ $field }}" aria-label="المبلغ المدفوع">
                             <p data-error-for="amount_paid" class="{{ $err }}"></p>
                         @else
                             <span class="{{ $static }}" dir="ltr">{{ $money($r?->amount_paid) }}</span>
@@ -265,7 +265,7 @@
                     <th scope="row" colspan="2" class="{{ $ar }}">تاريخ بداية العقد</th>
                     <td colspan="2" class="{{ $yellow }}">
                         @if ($edit)
-                            <input type="date" name="start_date" class="{{ $field }}" aria-label="تاريخ بداية العقد">
+                            <input type="date" name="start_date" value="{{ $iso($r?->start_date) }}" class="{{ $field }}" aria-label="تاريخ بداية العقد">
                             <p data-error-for="start_date" class="{{ $err }}"></p>
                         @else
                             <span class="{{ $static }}" dir="ltr">{{ $date($r?->start_date) }}</span>

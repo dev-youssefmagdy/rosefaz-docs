@@ -13,17 +13,28 @@ export function clearErrors(form) {
         el.textContent = '';
         el.classList.add('hidden');
     });
+    form.parentElement?.querySelector('.js-form-error-alert')?.remove();
 }
 
 export function showErrors(form, errors = {}) {
     clearErrors(form);
+    const unmatched = [];
     Object.entries(errors).forEach(([field, messages]) => {
         const el = form.querySelector(`[data-error-for="${field}"]`);
         if (el) {
             el.textContent = Array.isArray(messages) ? messages[0] : messages;
             el.classList.remove('hidden');
+        } else {
+            unmatched.push(Array.isArray(messages) ? messages[0] : messages);
         }
     });
+    if (unmatched.length > 0) {
+        const alert = document.createElement('div');
+        alert.className = 'js-form-error-alert rounded-md bg-red-50 border border-red-300 p-4 mb-4 text-sm text-red-700';
+        alert.setAttribute('role', 'alert');
+        alert.innerHTML = unmatched.map((m) => `<p>${m}</p>`).join('');
+        form.insertAdjacentElement('beforebegin', alert);
+    }
 }
 
 export function debounce(fn, delay = 300) {
